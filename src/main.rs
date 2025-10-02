@@ -1,4 +1,5 @@
 mod scanner;
+mod token;
 
 use scanner::Scanner;
 use std::{
