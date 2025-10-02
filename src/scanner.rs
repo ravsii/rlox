@@ -7,7 +7,7 @@ impl Scanner {
         Scanner { source }
     }
 
-    pub fn scan(&self) {
-        println!("{}", self.source)
+    pub fn scan_tokens(&self) -> Vec<&str> {
+        return self.source.split_whitespace().collect();
     }
 }

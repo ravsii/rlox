@@ -61,5 +61,9 @@ fn run_prompt() {
 
 fn run(source: String) {
     let scanner = Scanner::new(source);
-    scanner.scan();
+    let tokens = scanner.scan_tokens();
+
+    for token in tokens {
+        println!("{}", token);
+    }
 }
