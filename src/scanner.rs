@@ -38,6 +38,7 @@ impl<'a> Scanner<'a> {
 
     fn scan_token(&mut self) {
         match self.advance() {
+            // Simple tokens
             '(' => self.add_token(TokenType::LeftParen),
             ')' => self.add_token(TokenType::RightParen),
             '{' => self.add_token(TokenType::LeftBrace),
@@ -57,6 +58,7 @@ impl<'a> Scanner<'a> {
             }
             '/' => self.add_token(TokenType::Slash),
 
+            // One-Two character tokens
             '!' => {
                 if self.char_match('=') {
                     self.add_token(TokenType::BangEqual);
@@ -85,6 +87,9 @@ impl<'a> Scanner<'a> {
                     self.add_token(TokenType::Greater);
                 }
             }
+
+            // Literals
+            '"' => self.string(),
 
             // Useless characters
             ' ' | '\r' | '\t' => {}
@@ -137,5 +142,29 @@ impl<'a> Scanner<'a> {
             "".into(),
             self.line,
         ));
+    }
+
+    fn add_token_val(&mut self, token_type: TokenType, val: String) {
+        let text = &self.source[self.start..self.current];
+        self.tokens
+            .push(Token::new(token_type, text.to_string(), val, self.line));
+    }
+
+    fn string(&mut self) {
+        while self.peek() != '"' && !self.is_end() {
+            if self.peek() == '\n' {
+                self.line += 1
+            }
+            self.advance();
+        }
+
+        if self.is_end() {
+            self.lox_runner.error(self.line, "Unterminated string");
+            return;
+        }
+
+        self.advance();
+        let text = &self.source[self.start + 1..self.current - 1];
+        self.add_token_val(TokenType::String, text.into());
     }
 }
