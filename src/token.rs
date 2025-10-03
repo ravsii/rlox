@@ -105,16 +105,35 @@ impl fmt::Display for TokenType {
     }
 }
 
-#[derive(Default, Debug)]
+#[derive(Debug, Clone)]
+pub enum Literal {
+    Number(f64),
+    String(String),
+    Bool(bool),
+    Nil,
+}
+
+impl fmt::Display for Literal {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Literal::Number(n) => write!(f, "{}", n),
+            Literal::String(s) => write!(f, "{}", s),
+            Literal::Bool(b) => write!(f, "{}", b),
+            Literal::Nil => write!(f, "nil"),
+        }
+    }
+}
+
+#[derive(Debug)]
 pub struct Token {
     token_type: TokenType,
     lexeme: String,
-    literal: String,
+    literal: Option<Literal>,
     line: i32,
 }
 
 impl Token {
-    pub fn new(token_type: TokenType, lexeme: String, literal: String, line: i32) -> Self {
+    pub fn new(token_type: TokenType, lexeme: String, literal: Option<Literal>, line: i32) -> Self {
         Token {
             token_type,
             lexeme,
@@ -126,6 +145,11 @@ impl Token {
 
 impl fmt::Display for Token {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} {} {}", self.token_type, self.lexeme, self.literal)
+        let literal_str = match &self.literal {
+            Some(lit) => lit.to_string(),
+            None => "nil".into(),
+        };
+
+        write!(f, "{} {} {}", self.token_type, self.lexeme, literal_str)
     }
 }

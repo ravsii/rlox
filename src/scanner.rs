@@ -1,6 +1,6 @@
 use crate::{
     LoxRunner,
-    token::{Token, TokenType},
+    token::{Literal, Token, TokenType},
 };
 
 pub struct Scanner<'a> {
@@ -31,7 +31,7 @@ impl<'a> Scanner<'a> {
         }
 
         self.tokens
-            .push(Token::new(TokenType::Eof, "".into(), "".into(), self.line));
+            .push(Token::new(TokenType::Eof, "".into(), None, self.line));
 
         &self.tokens
     }
@@ -90,6 +90,7 @@ impl<'a> Scanner<'a> {
 
             // Literals
             '"' => self.string(),
+            '0'..='9' => self.number(),
 
             // Useless characters
             ' ' | '\r' | '\t' => {}
@@ -124,6 +125,14 @@ impl<'a> Scanner<'a> {
         self.cur_char()
     }
 
+    fn peek_next(&self) -> char {
+        if self.current >= self.source.len() {
+            return '\0';
+        }
+
+        self.source.chars().nth(self.current + 1).unwrap()
+    }
+
     fn char_match(&mut self, expected: char) -> bool {
         println!("1 {}", expected);
         if self.is_end() || self.cur_char() != expected {
@@ -136,18 +145,18 @@ impl<'a> Scanner<'a> {
 
     fn add_token(&mut self, token_type: TokenType) {
         let text = &self.source[self.start..self.current];
+        self.tokens
+            .push(Token::new(token_type, text.to_string(), None, self.line));
+    }
+
+    fn add_token_val(&mut self, token_type: TokenType, val: Literal) {
+        let text = &self.source[self.start..self.current];
         self.tokens.push(Token::new(
             token_type,
             text.to_string(),
-            "".into(),
+            Some(val),
             self.line,
         ));
-    }
-
-    fn add_token_val(&mut self, token_type: TokenType, val: String) {
-        let text = &self.source[self.start..self.current];
-        self.tokens
-            .push(Token::new(token_type, text.to_string(), val, self.line));
     }
 
     fn string(&mut self) {
@@ -165,6 +174,25 @@ impl<'a> Scanner<'a> {
 
         self.advance();
         let text = &self.source[self.start + 1..self.current - 1];
-        self.add_token_val(TokenType::String, text.into());
+        self.add_token_val(TokenType::String, Literal::String(text.into()));
+    }
+
+    fn number(&mut self) {
+        while self.peek().is_ascii_digit() {
+            self.advance();
+        }
+
+        if self.peek() == '.' && self.peek_next().is_ascii_digit() {
+            self.advance();
+
+            while self.peek().is_ascii_digit() {
+                self.advance();
+            }
+        }
+
+        self.add_token_val(
+            TokenType::Number,
+            Literal::Number(self.source[self.start..self.current].parse().unwrap()),
+        );
     }
 }
