@@ -1,7 +1,10 @@
-use crate::token::{Token, TokenType};
+use crate::{
+    LoxRunner,
+    token::{Token, TokenType},
+};
 
-#[derive(Default)]
-pub struct Scanner {
+pub struct Scanner<'a> {
+    lox_runner: &'a mut LoxRunner,
     source: String,
     tokens: Vec<Token>,
     start: usize,
@@ -9,12 +12,15 @@ pub struct Scanner {
     line: i32,
 }
 
-impl Scanner {
-    pub fn new(source: String) -> Scanner {
+impl<'a> Scanner<'a> {
+    pub fn new(lox_runner: &'a mut LoxRunner, source: String) -> Scanner<'a> {
         Scanner {
-            source,
+            current: 0,
             line: 1,
-            ..Default::default()
+            lox_runner,
+            source,
+            start: 0,
+            tokens: vec![],
         }
     }
 
@@ -26,7 +32,8 @@ impl Scanner {
 
         self.tokens
             .push(Token::new(TokenType::Eof, "".into(), "".into(), self.line));
-        return &self.tokens;
+
+        &self.tokens
     }
 
     fn scan_token(&mut self) {
@@ -41,7 +48,9 @@ impl Scanner {
             '+' => self.add_token(TokenType::Plus),
             ';' => self.add_token(TokenType::Semicolon),
             '*' => self.add_token(TokenType::Star),
-            c => println!("unknow token {}", c),
+            c => self
+                .lox_runner
+                .error(self.line, format!("Unexpected character: {}", c).as_str()),
         }
     }
 
