@@ -49,14 +49,47 @@ impl<'a> Scanner<'a> {
             ';' => self.add_token(TokenType::Semicolon),
             '*' => self.add_token(TokenType::Star),
 
-            '!' if self.char_match('=') => self.add_token(TokenType::BangEqual),
-            '!' => self.add_token(TokenType::Bang),
-            '=' if self.char_match('=') => self.add_token(TokenType::EqualEqual),
-            '=' => self.add_token(TokenType::Equal),
-            '<' if self.char_match('=') => self.add_token(TokenType::LessEqual),
-            '<' => self.add_token(TokenType::Less),
-            '>' if self.char_match('=') => self.add_token(TokenType::GreaterEqual),
-            '>' => self.add_token(TokenType::Greater),
+            // Special comment case
+            '/' if self.char_match('/') => {
+                while self.peek() != '\n' && !self.is_end() {
+                    self.advance();
+                }
+            }
+            '/' => self.add_token(TokenType::Slash),
+
+            '!' => {
+                if self.char_match('=') {
+                    self.add_token(TokenType::BangEqual);
+                } else {
+                    self.add_token(TokenType::Bang);
+                }
+            }
+            '=' => {
+                if self.char_match('=') {
+                    self.add_token(TokenType::EqualEqual);
+                } else {
+                    self.add_token(TokenType::Equal);
+                }
+            }
+            '<' => {
+                if self.char_match('=') {
+                    self.add_token(TokenType::LessEqual);
+                } else {
+                    self.add_token(TokenType::Less);
+                }
+            }
+            '>' => {
+                if self.char_match('=') {
+                    self.add_token(TokenType::GreaterEqual);
+                } else {
+                    self.add_token(TokenType::Greater);
+                }
+            }
+
+            // Useless characters
+            ' ' | '\r' | '\t' => {}
+
+            '\n' => self.line += 1,
 
             c => self
                 .lox_runner
@@ -68,13 +101,27 @@ impl<'a> Scanner<'a> {
         self.current >= self.source.len()
     }
 
-    fn advance(&mut self) -> char {
-        self.current += 1;
+    fn cur_char(&self) -> char {
         self.source.chars().nth(self.current).unwrap()
     }
 
+    fn advance(&mut self) -> char {
+        let c = self.cur_char();
+        self.current += 1;
+        c
+    }
+
+    fn peek(&self) -> char {
+        if self.is_end() {
+            return '\0';
+        }
+
+        self.cur_char()
+    }
+
     fn char_match(&mut self, expected: char) -> bool {
-        if self.is_end() || self.source.chars().nth(self.current).unwrap() != expected {
+        println!("1 {}", expected);
+        if self.is_end() || self.cur_char() != expected {
             return false;
         }
 
