@@ -1,7 +1,7 @@
 use std::fmt;
 
 #[derive(Debug)]
-enum TokenType {
+pub enum TokenType {
     // Single-character tokens.
     LeftParen,
     RightParen,
@@ -50,14 +50,6 @@ enum TokenType {
 
     Eof,
     Unknown,
-}
-
-#[derive(Default, Debug)]
-struct Token {
-    token_type: TokenType,
-    lexeme: String,
-    literal: String,
-    line: i32,
 }
 
 impl Default for TokenType {
@@ -110,6 +102,25 @@ impl fmt::Display for TokenType {
             TokenType::Unknown => "Unknown",
         };
         write!(f, "{}", s)
+    }
+}
+
+#[derive(Default, Debug)]
+pub struct Token {
+    token_type: TokenType,
+    lexeme: String,
+    literal: String,
+    line: i32,
+}
+
+impl Token {
+    pub fn new(token_type: TokenType, lexeme: String, literal: String, line: i32) -> Self {
+        Token {
+            token_type,
+            lexeme,
+            literal,
+            line,
+        }
     }
 }
 
