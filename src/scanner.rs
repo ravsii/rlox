@@ -90,7 +90,8 @@ impl<'a> Scanner<'a> {
 
             // Literals
             '"' => self.string(),
-            '0'..='9' => self.number(),
+            d if d.is_ascii_digit() => self.number(),
+            c if c.is_alphabetic() => self.identifier(),
 
             // Useless characters
             ' ' | '\r' | '\t' => {}
@@ -194,5 +195,38 @@ impl<'a> Scanner<'a> {
             TokenType::Number,
             Literal::Number(self.source[self.start..self.current].parse().unwrap()),
         );
+    }
+
+    fn identifier(&mut self) {
+        while self.peek().is_alphanumeric() {
+            self.advance();
+        }
+
+        let text = &self.source[self.start..self.current];
+        let token_type = is_keyword(text).unwrap_or(TokenType::Identifier);
+
+        self.add_token(token_type);
+    }
+}
+
+fn is_keyword(lexeme: &str) -> Option<TokenType> {
+    match lexeme {
+        "and" => Some(TokenType::And),
+        "class" => Some(TokenType::Class),
+        "else" => Some(TokenType::Else),
+        "false" => Some(TokenType::False),
+        "for" => Some(TokenType::For),
+        "fun" => Some(TokenType::Fun),
+        "if" => Some(TokenType::If),
+        "nil" => Some(TokenType::Nil),
+        "or" => Some(TokenType::Or),
+        "print" => Some(TokenType::Print),
+        "return" => Some(TokenType::Return),
+        "super" => Some(TokenType::Super),
+        "this" => Some(TokenType::This),
+        "true" => Some(TokenType::True),
+        "var" => Some(TokenType::Var),
+        "while" => Some(TokenType::While),
+        _ => None,
     }
 }

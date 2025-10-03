@@ -109,8 +109,6 @@ impl fmt::Display for TokenType {
 pub enum Literal {
     Number(f64),
     String(String),
-    Bool(bool),
-    Nil,
 }
 
 impl fmt::Display for Literal {
@@ -118,8 +116,8 @@ impl fmt::Display for Literal {
         match self {
             Literal::Number(n) => write!(f, "{}", n),
             Literal::String(s) => write!(f, "{}", s),
-            Literal::Bool(b) => write!(f, "{}", b),
-            Literal::Nil => write!(f, "nil"),
+            // Literal::Bool(b) => write!(f, "{}", b),
+            // Literal::Nil => write!(f, "nil"),
         }
     }
 }
