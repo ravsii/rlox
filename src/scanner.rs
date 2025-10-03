@@ -48,6 +48,16 @@ impl<'a> Scanner<'a> {
             '+' => self.add_token(TokenType::Plus),
             ';' => self.add_token(TokenType::Semicolon),
             '*' => self.add_token(TokenType::Star),
+
+            '!' if self.char_match('=') => self.add_token(TokenType::BangEqual),
+            '!' => self.add_token(TokenType::Bang),
+            '=' if self.char_match('=') => self.add_token(TokenType::EqualEqual),
+            '=' => self.add_token(TokenType::Equal),
+            '<' if self.char_match('=') => self.add_token(TokenType::LessEqual),
+            '<' => self.add_token(TokenType::Less),
+            '>' if self.char_match('=') => self.add_token(TokenType::GreaterEqual),
+            '>' => self.add_token(TokenType::Greater),
+
             c => self
                 .lox_runner
                 .error(self.line, format!("Unexpected character: {}", c).as_str()),
@@ -61,6 +71,15 @@ impl<'a> Scanner<'a> {
     fn advance(&mut self) -> char {
         self.current += 1;
         self.source.chars().nth(self.current).unwrap()
+    }
+
+    fn char_match(&mut self, expected: char) -> bool {
+        if self.is_end() || self.source.chars().nth(self.current).unwrap() != expected {
+            return false;
+        }
+
+        self.current += 1;
+        true
     }
 
     fn add_token(&mut self, token_type: TokenType) {
