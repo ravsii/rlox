@@ -1,5 +1,6 @@
 mod ast;
 mod ast_printer;
+mod parser;
 mod scanner;
 mod token;
 
@@ -14,7 +15,7 @@ use std::{
 
 use crate::{
     ast::{Binary, Expr, Grouping, Literal, Unary},
-    ast_printer::{AstPrinter, AstPrinterRPN},
+    ast_printer::AstPrinter,
     token::Token,
 };
 
@@ -37,7 +38,7 @@ fn main() {
     });
 
     println!("{}", AstPrinter::print(&text_expr));
-    println!("{}", AstPrinterRPN::print(&text_expr));
+    // println!("{}", AstPrinterRPN::print(&text_expr));
 
     match args.len() {
         1 => runner.run_prompt(),

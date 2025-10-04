@@ -2,7 +2,7 @@ use std::fmt;
 
 use crate::ast::Literal;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq, Copy)]
 pub enum TokenType {
     // Single-character tokens.
     LeftParen,
@@ -50,7 +50,7 @@ pub enum TokenType {
     Var,
     While,
 
-    Eof,
+    EOF,
     Unknown,
 }
 
@@ -100,7 +100,7 @@ impl fmt::Display for TokenType {
             TokenType::True => "True",
             TokenType::Var => "Var",
             TokenType::While => "While",
-            TokenType::Eof => "Eof",
+            TokenType::EOF => "Eof",
             TokenType::Unknown => "Unknown",
         };
         write!(f, "{}", s)
@@ -123,6 +123,12 @@ impl Token {
             literal,
             line,
         }
+    }
+}
+
+impl Token {
+    pub fn typ(&self) -> TokenType {
+        self.token_type
     }
 }
 
