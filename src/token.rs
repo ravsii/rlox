@@ -1,6 +1,8 @@
 use std::fmt;
 
-#[derive(Debug)]
+use crate::ast::Literal;
+
+#[derive(Debug, Clone)]
 pub enum TokenType {
     // Single-character tokens.
     LeftParen,
@@ -106,26 +108,9 @@ impl fmt::Display for TokenType {
 }
 
 #[derive(Debug, Clone)]
-pub enum Literal {
-    Number(f64),
-    String(String),
-}
-
-impl fmt::Display for Literal {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Literal::Number(n) => write!(f, "{}", n),
-            Literal::String(s) => write!(f, "{}", s),
-            // Literal::Bool(b) => write!(f, "{}", b),
-            // Literal::Nil => write!(f, "nil"),
-        }
-    }
-}
-
-#[derive(Debug)]
 pub struct Token {
     token_type: TokenType,
-    lexeme: String,
+    pub lexeme: String,
     literal: Option<Literal>,
     line: i32,
 }

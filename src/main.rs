@@ -1,3 +1,5 @@
+mod ast;
+mod ast_printer;
 mod scanner;
 mod token;
 
@@ -10,11 +12,31 @@ use std::{
     process,
 };
 
+use crate::{
+    ast::{Binary, Expr, Grouping, Literal, Unary},
+    ast_printer::AstPrinter,
+    token::Token,
+};
+
 fn main() {
     let args: Vec<String> = args().collect();
 
     println!("All args: {:?}", args);
     let mut runner = LoxRunner::default();
+
+    // ast check
+    let text_expr = Expr::Binary(Binary {
+        left: Box::new(Expr::Unary(Unary {
+            operator: Token::new(token::TokenType::Minus, "-".into(), None, 1),
+            right: Box::new(Expr::Literal(Literal::Number(123.))),
+        })),
+        operator: Token::new(token::TokenType::Star, "*".into(), None, 1),
+        right: Box::new(Expr::Grouping(Grouping {
+            expression: Box::new(Expr::Literal(Literal::Number(45.67))),
+        })),
+    });
+
+    println!("{}", AstPrinter.print(&text_expr));
 
     match args.len() {
         1 => runner.run_prompt(),

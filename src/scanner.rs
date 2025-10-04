@@ -1,6 +1,7 @@
 use crate::{
     LoxRunner,
-    token::{Literal, Token, TokenType},
+    ast::Literal,
+    token::{Token, TokenType},
 };
 
 pub struct Scanner<'a> {
