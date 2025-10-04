@@ -49,14 +49,16 @@ impl<'a> Scanner<'a> {
             '+' => self.add_token(TokenType::Plus),
             ';' => self.add_token(TokenType::Semicolon),
             '*' => self.add_token(TokenType::Star),
-
-            // Special comment case
-            '/' if self.char_match('/') => {
-                while self.peek() != '\n' && !self.is_end() {
-                    self.advance();
+            '/' => {
+                // Special comment case
+                if self.char_match('/') {
+                    while self.peek() != '\n' && !self.is_end() {
+                        self.advance();
+                    }
+                } else {
+                    self.add_token(TokenType::Slash)
                 }
             }
-            '/' => self.add_token(TokenType::Slash),
 
             // One-Two character tokens
             '!' => {
@@ -135,7 +137,6 @@ impl<'a> Scanner<'a> {
     }
 
     fn char_match(&mut self, expected: char) -> bool {
-        println!("1 {}", expected);
         if self.is_end() || self.cur_char() != expected {
             return false;
         }
