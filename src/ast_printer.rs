@@ -36,11 +36,14 @@ pub struct AstPrinterRPN;
 impl AstPrinterRPN {
     pub fn print(expr: &Expr) -> String {
         match expr {
-            Expr::Binary(binary) => {
-                AstPrinterRPN::parenthesize(&binary.operator.lexeme, &[&binary.left, &binary.right])
-            }
+            Expr::Binary(binary) => format!(
+                "({} {} {})",
+                AstPrinterRPN::print(&binary.left),
+                AstPrinterRPN::print(&binary.right),
+                binary.operator.lexeme
+            ),
             Expr::Grouping(grouping) => {
-                AstPrinterRPN::parenthesize("group", &[&grouping.expression])
+                format!("({} group)", AstPrinterRPN::print(&grouping.expression))
             }
             Expr::Literal(literal) => match literal {
                 Literal::Number(n) => n.to_string(),
@@ -48,23 +51,11 @@ impl AstPrinterRPN {
                 Literal::Bool(b) => b.to_string(),
                 Literal::Nil => "nil".to_string(),
             },
-            Expr::Unary(unary) => {
-                AstPrinterRPN::parenthesize(&unary.operator.lexeme, &[&unary.right])
-            }
+            Expr::Unary(unary) => format!(
+                "({} {})",
+                AstPrinterRPN::print(&unary.right),
+                unary.operator.lexeme
+            ),
         }
-    }
-
-    fn parenthesize(name: &str, exprs: &[&Expr]) -> String {
-        let mut result = String::new();
-
-        result.push('(');
-        for expr in exprs {
-            result.push_str(&AstPrinterRPN::print(expr));
-            result.push(' ');
-        }
-
-        result.push_str(name);
-        result.push(')');
-        result
     }
 }
