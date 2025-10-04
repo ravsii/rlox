@@ -10,24 +10,6 @@ pub enum Expr {
     Unary(Unary),
 }
 
-pub trait ExprVisitor<R> {
-    fn visit_binary(&mut self, expr: &Binary) -> R;
-    fn visit_grouping(&mut self, expr: &Grouping) -> R;
-    fn visit_literal(&mut self, expr: &Literal) -> R;
-    fn visit_unary(&mut self, expr: &Unary) -> R;
-}
-
-impl Expr {
-    pub fn accept<R>(&self, visitor: &mut dyn ExprVisitor<R>) -> R {
-        match self {
-            Expr::Binary(expr) => visitor.visit_binary(expr),
-            Expr::Grouping(expr) => visitor.visit_grouping(expr),
-            Expr::Literal(expr) => visitor.visit_literal(expr),
-            Expr::Unary(expr) => visitor.visit_unary(expr),
-        }
-    }
-}
-
 #[derive(Debug, Clone)]
 pub struct Binary {
     pub left: Box<Expr>,
