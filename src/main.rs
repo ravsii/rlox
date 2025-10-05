@@ -16,29 +16,13 @@ use std::{
 use crate::{
     ast::{Binary, Expr, Grouping, Literal, Unary},
     ast_printer::AstPrinter,
+    parser::Parser,
     token::{Token, TokenType},
 };
 
 fn main() {
     let args: Vec<String> = args().collect();
-
-    println!("All args: {:?}", args);
     let mut runner = LoxRunner::default();
-
-    // ast check
-    let text_expr = Expr::Binary(Binary {
-        left: Box::new(Expr::Unary(Unary {
-            operator: Token::new(token::TokenType::Minus, "-".into(), None, 1),
-            right: Box::new(Expr::Literal(Literal::Number(123.))),
-        })),
-        operator: Token::new(token::TokenType::Star, "*".into(), None, 1),
-        right: Box::new(Expr::Grouping(Grouping {
-            expression: Box::new(Expr::Literal(Literal::Number(45.67))),
-        })),
-    });
-
-    println!("{}", AstPrinter::print(&text_expr));
-    // println!("{}", AstPrinterRPN::print(&text_expr));
 
     match args.len() {
         1 => runner.run_prompt(),
@@ -99,10 +83,15 @@ impl LoxRunner {
     fn run(&mut self, source: String) {
         let mut scanner = Scanner::new(self, source);
         let tokens = scanner.scan_tokens();
+        let mut parser = Parser::new(self, tokens);
+        let expr = parser.parse();
 
-        for token in tokens {
-            println!("{}", token);
+        // TODO: remove all these errors stuff and just return errors from functions
+        if self.had_error || expr.is_none() {
+            return;
         }
+
+        println!("{}", AstPrinter::print(&expr.unwrap()));
     }
 
     pub fn error(&mut self, line: i32, message: &str) {
