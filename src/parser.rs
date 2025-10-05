@@ -4,6 +4,8 @@ use crate::{
     token::{Token, TokenType},
 };
 
+pub struct ParseError;
+
 pub struct Parser<'a> {
     lox_runner: &'a mut LoxRunner,
     tokens: Vec<Token>,
@@ -108,6 +110,7 @@ impl<'a> Parser<'a> {
             return Some(Expr::new_grouping(expr));
         }
 
+        self.error(self.peek(), "Expected expression");
         None
     }
 
@@ -132,6 +135,32 @@ impl<'a> Parser<'a> {
 
     fn error(&mut self, token: Token, message: &str) {
         self.lox_runner.error_token(token, message);
+    }
+
+    fn synchronize(&mut self) {
+        self.advance();
+
+        while !self.is_end() {
+            if self.previous().token_type == TokenType::Semicolon {
+                return;
+            }
+
+            match self.peek().token_type {
+                TokenType::Class
+                | TokenType::For
+                | TokenType::Fun
+                | TokenType::If
+                | TokenType::Print
+                | TokenType::Return
+                | TokenType::Var
+                | TokenType::While => {
+                    return;
+                }
+                _ => {}
+            }
+
+            self.advance();
+        }
     }
 
     fn check_token(&self, typ: TokenType) -> bool {
