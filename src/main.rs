@@ -16,7 +16,7 @@ use std::{
 use crate::{
     ast::{Binary, Expr, Grouping, Literal, Unary},
     ast_printer::AstPrinter,
-    token::Token,
+    token::{Token, TokenType},
 };
 
 fn main() {
@@ -107,6 +107,17 @@ impl LoxRunner {
 
     pub fn error(&mut self, line: i32, message: &str) {
         self.report(line, "", message);
+    }
+
+    pub fn error_token(&mut self, token: Token, message: &str) {
+        match token.token_type {
+            TokenType::EOF => self.report(token.line, " at end", message),
+            _ => {
+                let mut pos_str = String::from(" at '");
+                pos_str.push_str(token.lexeme.as_str());
+                self.report(token.line, &pos_str, message);
+            }
+        }
     }
 
     fn report(&mut self, line: i32, pos: &str, message: &str) {

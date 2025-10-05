@@ -98,13 +98,13 @@ impl<'a> Parser<'a> {
         }
 
         if self.match_type(&[TokenType::Number, TokenType::String]) {
-            let prev = self.previous().literal();
+            let prev = self.previous().literal;
             return Some(Expr::Literal(prev.unwrap()));
         }
 
         if self.match_type(&[TokenType::LeftParen]) {
             let expr = self.expression();
-            self.consume(); // TODO:
+            self.consume(TokenType::RightParen, "Expect ')' after expression");
             return Some(Expr::new_grouping(expr));
         }
 
@@ -122,12 +122,24 @@ impl<'a> Parser<'a> {
         false
     }
 
+    fn consume(&mut self, token_type: TokenType, message: &str) {
+        if !self.check_token(token_type) {
+            self.error(self.peek().clone(), message)
+        };
+
+        self.advance();
+    }
+
+    fn error(&mut self, token: Token, message: &str) {
+        self.lox_runner.error_token(token, message);
+    }
+
     fn check_token(&self, typ: TokenType) -> bool {
         if self.is_end() {
             return false;
         };
 
-        self.peek().typ() == typ
+        self.peek().token_type == typ
     }
 
     fn advance(&mut self) -> Token {
@@ -139,18 +151,14 @@ impl<'a> Parser<'a> {
     }
 
     fn is_end(&self) -> bool {
-        self.peek().typ() == TokenType::EOF
+        self.peek().token_type == TokenType::EOF
     }
 
-    fn peek(&self) -> &Token {
-        self.tokens.get(self.current).unwrap()
+    fn peek(&self) -> Token {
+        self.tokens.get(self.current).unwrap().clone()
     }
 
     fn previous(&self) -> Token {
         self.tokens.get(self.current - 1).unwrap().clone()
-    }
-
-    fn consume(&self) {
-        todo!()
     }
 }

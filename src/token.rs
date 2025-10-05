@@ -109,10 +109,10 @@ impl fmt::Display for TokenType {
 
 #[derive(Debug, Clone)]
 pub struct Token {
-    token_type: TokenType,
+    pub token_type: TokenType,
     pub lexeme: String,
-    literal: Option<Literal>,
-    line: i32,
+    pub literal: Option<Literal>,
+    pub line: i32,
 }
 
 impl Token {
@@ -123,16 +123,6 @@ impl Token {
             literal,
             line,
         }
-    }
-}
-
-impl Token {
-    pub fn typ(&self) -> TokenType {
-        self.token_type
-    }
-
-    pub fn literal(&self) -> Option<Literal> {
-        self.literal.clone()
     }
 }
 
