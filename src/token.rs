@@ -130,6 +130,10 @@ impl Token {
     pub fn typ(&self) -> TokenType {
         self.token_type
     }
+
+    pub fn literal(&self) -> Option<Literal> {
+        self.literal.clone()
+    }
 }
 
 impl fmt::Display for Token {

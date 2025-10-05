@@ -10,6 +10,29 @@ pub enum Expr {
     Unary(Unary),
 }
 
+impl Expr {
+    pub fn new_binary(left: Expr, operator: Token, right: Expr) -> Expr {
+        Expr::Binary(Binary {
+            left: Box::new(left),
+            operator,
+            right: Box::new(right),
+        })
+    }
+
+    pub fn new_grouping(expr: Expr) -> Expr {
+        Expr::Grouping(Grouping {
+            expression: Box::new(expr),
+        })
+    }
+
+    pub fn new_unary(operator: Token, right: Expr) -> Expr {
+        Expr::Unary(Unary {
+            operator,
+            right: Box::new(right),
+        })
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct Binary {
     pub left: Box<Expr>,

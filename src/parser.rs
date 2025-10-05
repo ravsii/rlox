@@ -1,6 +1,6 @@
 use crate::{
     LoxRunner,
-    ast::{Binary, Expr},
+    ast::{Binary, Expr, Literal},
     token::{Token, TokenType},
 };
 
@@ -29,23 +29,91 @@ impl<'a> Parser<'a> {
         while self.match_type(&[TokenType::BangEqual, TokenType::EqualEqual]) {
             let operator = self.previous();
             let right = self.comparison();
-            expr = Expr::Binary(Binary {
-                left: Box::new(expr),
-                operator,
-                right: Box::new(right),
-            })
+            expr = Expr::new_binary(expr, operator, right)
         }
 
         expr
     }
 
-    fn comparison(&self) -> Expr {
-        todo!()
+    fn comparison(&mut self) -> Expr {
+        let mut expr = self.term();
+
+        while self.match_type(&[
+            TokenType::Greater,
+            TokenType::GreaterEqual,
+            TokenType::Less,
+            TokenType::LessEqual,
+        ]) {
+            let operator = self.previous();
+            let right = self.term();
+            expr = Expr::new_binary(expr, operator, right)
+        }
+
+        expr
+    }
+
+    fn term(&mut self) -> Expr {
+        let mut expr = self.factor();
+
+        while self.match_type(&[TokenType::Plus, TokenType::Minus]) {
+            let operator = self.previous();
+            let right = self.factor();
+            expr = Expr::new_binary(expr, operator, right)
+        }
+
+        expr
+    }
+
+    fn factor(&mut self) -> Expr {
+        let mut expr = self.unary();
+
+        while self.match_type(&[TokenType::Slash, TokenType::Star]) {
+            let operator = self.previous();
+            let right = self.unary();
+            expr = Expr::new_binary(expr, operator, right)
+        }
+
+        expr
+    }
+
+    fn unary(&mut self) -> Expr {
+        if self.match_type(&[TokenType::Bang, TokenType::Minus]) {
+            let operator = self.previous();
+            let right = self.unary();
+            return Expr::new_unary(operator, right);
+        }
+
+        self.primary().unwrap()
+    }
+
+    fn primary(&mut self) -> Option<Expr> {
+        if self.match_type(&[TokenType::False]) {
+            return Some(Expr::Literal(Literal::Bool(false)));
+        }
+        if self.match_type(&[TokenType::True]) {
+            return Some(Expr::Literal(Literal::Bool(true)));
+        }
+        if self.match_type(&[TokenType::Nil]) {
+            return Some(Expr::Literal(Literal::Nil));
+        }
+
+        if self.match_type(&[TokenType::Number, TokenType::String]) {
+            let prev = self.previous().literal();
+            return Some(Expr::Literal(prev.unwrap()));
+        }
+
+        if self.match_type(&[TokenType::LeftParen]) {
+            let expr = self.expression();
+            self.consume(); // TODO:
+            return Some(Expr::new_grouping(expr));
+        }
+
+        None
     }
 
     fn match_type(&mut self, types: &[TokenType]) -> bool {
         for typ in types {
-            if self.check(*typ) {
+            if self.check_token(*typ) {
                 self.advance();
                 return true;
             }
@@ -54,7 +122,7 @@ impl<'a> Parser<'a> {
         false
     }
 
-    fn check(&self, typ: TokenType) -> bool {
+    fn check_token(&self, typ: TokenType) -> bool {
         if self.is_end() {
             return false;
         };
@@ -80,5 +148,9 @@ impl<'a> Parser<'a> {
 
     fn previous(&self) -> Token {
         self.tokens.get(self.current - 1).unwrap().clone()
+    }
+
+    fn consume(&self) {
+        todo!()
     }
 }
