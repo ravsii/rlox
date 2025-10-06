@@ -51,7 +51,7 @@ pub struct Unary {
     pub right: Box<Expr>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, PartialOrd)]
 pub enum Literal {
     Number(f64),
     String(String),

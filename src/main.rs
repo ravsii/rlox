@@ -1,5 +1,6 @@
 mod ast;
 mod ast_printer;
+mod interpreter;
 mod parser;
 mod scanner;
 mod token;
@@ -35,9 +36,7 @@ fn main() {
 }
 
 #[derive(Default)]
-pub struct LoxRunner {
-    had_error: bool,
-}
+pub struct LoxRunner;
 
 impl LoxRunner {
     fn run_file(&mut self, path: &Path) {
@@ -50,9 +49,9 @@ impl LoxRunner {
         });
 
         self.run(contents);
-        if self.had_error {
-            process::exit(65);
-        }
+        // if self.had_error {
+        //     process::exit(65);
+        // }
     }
 
     fn run_prompt(mut self) {
@@ -70,7 +69,7 @@ impl LoxRunner {
                 Ok(_) => {
                     self.run(input.trim().to_string());
                     input.clear();
-                    self.had_error = false
+                    // self.had_error = false
                 }
                 Err(err) => {
                     println!("failed to read line: {}", err);
@@ -81,17 +80,23 @@ impl LoxRunner {
     }
 
     fn run(&mut self, source: String) {
-        let mut scanner = Scanner::new(self, source);
-        let tokens = scanner.scan_tokens();
-        let mut parser = Parser::new(self, tokens);
-        let expr = parser.parse();
-
-        // TODO: remove all these errors stuff and just return errors from functions
-        if self.had_error || expr.is_none() {
-            return;
+        let scanner = Scanner::new(source);
+        match scanner.scan_tokens() {
+            Ok(tokens) => {
+                let mut parser = Parser::new(tokens);
+                match parser.parse() {
+                    Ok(expr) => {
+                        println!("{}", AstPrinter::print(&expr));
+                    }
+                    Err(err) => {
+                        self.error_token(err.token, &err.message);
+                    }
+                }
+            }
+            Err(err) => {
+                self.error(0, &err.0);
+            }
         }
-
-        println!("{}", AstPrinter::print(&expr.unwrap()));
     }
 
     pub fn error(&mut self, line: i32, message: &str) {
@@ -111,6 +116,5 @@ impl LoxRunner {
 
     fn report(&mut self, line: i32, pos: &str, message: &str) {
         println!("[line {}] Error {}: {}", line, pos, message);
-        self.had_error = true
     }
 }

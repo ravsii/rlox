@@ -1,37 +1,26 @@
 use crate::{
-    LoxRunner,
-    ast::{Binary, Expr, Literal},
+    ast::{Expr, Literal},
     token::{Token, TokenType},
 };
 
+#[derive(Debug, Clone)]
 pub struct ParseError {
-    token: Token,
-    message: String,
+    pub token: Token,
+    pub message: String,
 }
 
-pub struct Parser<'a> {
-    lox_runner: &'a mut LoxRunner,
+pub struct Parser {
     tokens: Vec<Token>,
     current: usize,
 }
 
-impl<'a> Parser<'a> {
-    pub fn new(lox_runner: &'a mut LoxRunner, tokens: Vec<Token>) -> Parser<'a> {
-        Parser {
-            lox_runner,
-            tokens,
-            current: 0,
-        }
+impl Parser {
+    pub fn new(tokens: Vec<Token>) -> Parser {
+        Parser { tokens, current: 0 }
     }
 
-    pub fn parse(&mut self) -> Option<Expr> {
-        match self.expression() {
-            Ok(expr) => Some(expr),
-            Err(err) => {
-                self.lox_runner.error_token(err.token, &err.message);
-                None
-            }
-        }
+    pub fn parse(&mut self) -> Result<Expr, ParseError> {
+        self.expression()
     }
 
     fn expression(&mut self) -> Result<Expr, ParseError> {
@@ -119,7 +108,7 @@ impl<'a> Parser<'a> {
 
         if self.match_type(&[TokenType::LeftParen]) {
             let expr = self.expression()?;
-            self.consume(TokenType::RightParen, "Expect ')' after expression");
+            self.consume(TokenType::RightParen, "Expect ')' after expression")?;
             return Ok(Expr::new_grouping(expr));
         }
 
@@ -140,16 +129,17 @@ impl<'a> Parser<'a> {
         false
     }
 
-    fn consume(&mut self, token_type: TokenType, message: &str) {
+    fn consume(&mut self, token_type: TokenType, message: &str) -> Result<(), ParseError> {
         if !self.check_token(token_type) {
-            self.error(self.peek().clone(), message)
+            return Err(ParseError {
+                token: self.peek(),
+                message: message.to_string(),
+            });
         };
 
         self.advance();
-    }
 
-    fn error(&mut self, token: Token, message: &str) {
-        self.lox_runner.error_token(token, message);
+        Ok(())
     }
 
     fn synchronize(&mut self) {
