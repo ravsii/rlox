@@ -17,6 +17,7 @@ use std::{
 use crate::{
     ast::{Binary, Expr, Grouping, Literal, Unary},
     ast_printer::AstPrinter,
+    interpreter::Interpreter,
     parser::Parser,
     token::{Token, TokenType},
 };
@@ -81,12 +82,14 @@ impl LoxRunner {
 
     fn run(&mut self, source: String) {
         let scanner = Scanner::new(source);
+        let interpreter = Interpreter;
         match scanner.scan_tokens() {
             Ok(tokens) => {
                 let mut parser = Parser::new(tokens);
                 match parser.parse() {
                     Ok(expr) => {
-                        println!("{}", AstPrinter::print(&expr));
+                        let value = interpreter.evaluate(expr.clone());
+                        println!("{} -> {}", AstPrinter::print(&expr), value);
                     }
                     Err(err) => {
                         self.error_token(err.token, &err.message);

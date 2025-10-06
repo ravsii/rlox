@@ -6,7 +6,7 @@ use crate::{
 pub struct Interpreter;
 
 impl Interpreter {
-    fn evaluate(&self, expr: Expr) -> Literal {
+    pub fn evaluate(&self, expr: Expr) -> Literal {
         match expr {
             Expr::Binary(binary) => self.eval_binary(binary),
             Expr::Grouping(grouping) => self.evaluate(*grouping.expression),
