@@ -22,7 +22,7 @@ use crate::{
 
 fn main() {
     let args: Vec<String> = args().collect();
-    let mut runner = LoxRunner::default();
+    let mut runner = LoxRunner;
 
     match args.len() {
         1 => runner.run_prompt(),
@@ -83,7 +83,7 @@ impl LoxRunner {
             Ok(tokens) => tokens,
             Err(err) => {
                 self.error(0, &err.0);
-                return;
+                std::process::exit(65);
             }
         };
 
@@ -92,14 +92,17 @@ impl LoxRunner {
             Ok(expr) => expr,
             Err(err) => {
                 self.error_token(err.token, &err.message);
-                return;
+                std::process::exit(65);
             }
         };
 
         let result = interpreter.evaluate(expr.clone());
         match result {
             Ok(value) => println!("{} -> {}", AstPrinter::print(&expr), value),
-            Err(err) => self.error_token(err.operator, &err.message),
+            Err(err) => {
+                self.error_token(err.operator, &err.message);
+                std::process::exit(70);
+            }
         }
     }
 
