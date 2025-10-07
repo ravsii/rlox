@@ -11,11 +11,9 @@ use std::{
     fs,
     io::{self, Write},
     path::Path,
-    process,
 };
 
 use crate::{
-    ast::{Binary, Expr, Grouping, Literal, Unary},
     ast_printer::AstPrinter,
     interpreter::Interpreter,
     parser::Parser,
@@ -50,9 +48,6 @@ impl LoxRunner {
         });
 
         self.run(contents);
-        // if self.had_error {
-        //     process::exit(65);
-        // }
     }
 
     fn run_prompt(mut self) {
@@ -83,22 +78,28 @@ impl LoxRunner {
     fn run(&mut self, source: String) {
         let scanner = Scanner::new(source);
         let interpreter = Interpreter;
-        match scanner.scan_tokens() {
-            Ok(tokens) => {
-                let mut parser = Parser::new(tokens);
-                match parser.parse() {
-                    Ok(expr) => {
-                        let value = interpreter.evaluate(expr.clone());
-                        println!("{} -> {}", AstPrinter::print(&expr), value);
-                    }
-                    Err(err) => {
-                        self.error_token(err.token, &err.message);
-                    }
-                }
-            }
+
+        let tokens = match scanner.scan_tokens() {
+            Ok(tokens) => tokens,
             Err(err) => {
                 self.error(0, &err.0);
+                return;
             }
+        };
+
+        let mut parser = Parser::new(tokens);
+        let expr = match parser.parse() {
+            Ok(expr) => expr,
+            Err(err) => {
+                self.error_token(err.token, &err.message);
+                return;
+            }
+        };
+
+        let result = interpreter.evaluate(expr.clone());
+        match result {
+            Ok(value) => println!("{} -> {}", AstPrinter::print(&expr), value),
+            Err(err) => self.error_token(err.operator, &err.message),
         }
     }
 
@@ -110,8 +111,9 @@ impl LoxRunner {
         match token.token_type {
             TokenType::EOF => self.report(token.line, " at end", message),
             _ => {
-                let mut pos_str = String::from(" at '");
+                let mut pos_str = String::from("at '");
                 pos_str.push_str(token.lexeme.as_str());
+                pos_str.push('\'');
                 self.report(token.line, &pos_str, message);
             }
         }
