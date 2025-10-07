@@ -39,11 +39,23 @@ impl Interpreter {
             },
             TokenType::Star => match (left, right) {
                 (Literal::Number(l), Literal::Number(r)) => Ok(Literal::Number(l * r)),
+                (Literal::Number(l), Literal::String(r)) => {
+                    Ok(Literal::String(r.repeat(l as usize)))
+                }
+                (Literal::String(l), Literal::Number(r)) => {
+                    Ok(Literal::String(l.repeat(r as usize)))
+                }
                 _ => self.make_binary_err(binary.operator),
             },
             TokenType::Plus => match (left, right) {
                 (Literal::Number(l), Literal::Number(r)) => Ok(Literal::Number(l + r)),
                 (Literal::String(l), Literal::String(r)) => {
+                    Ok(Literal::String(format!("{}{}", l, r)))
+                }
+                (Literal::String(l), Literal::Number(r)) => {
+                    Ok(Literal::String(format!("{}{}", l, r)))
+                }
+                (Literal::Number(l), Literal::String(r)) => {
                     Ok(Literal::String(format!("{}{}", l, r)))
                 }
                 _ => Err(InterpreterError {
