@@ -14,7 +14,6 @@ use std::{
 };
 
 use crate::{
-    ast_printer::AstPrinter,
     interpreter::Interpreter,
     parser::Parser,
     token::{Token, TokenType},
@@ -65,7 +64,6 @@ impl LoxRunner {
                 Ok(_) => {
                     self.run(input.trim().to_string());
                     input.clear();
-                    // self.had_error = false
                 }
                 Err(err) => {
                     println!("failed to read line: {}", err);
@@ -87,8 +85,7 @@ impl LoxRunner {
             }
         };
 
-        let mut parser = Parser::new(tokens);
-        let expr = match parser.parse() {
+        let statements = match Parser::new(tokens).parse() {
             Ok(expr) => expr,
             Err(err) => {
                 self.error_token(err.token, &err.message);
@@ -96,9 +93,8 @@ impl LoxRunner {
             }
         };
 
-        let result = interpreter.evaluate(expr.clone());
-        match result {
-            Ok(value) => println!("{} -> {}", AstPrinter::print(&expr), value),
+        match interpreter.interpret(statements) {
+            Ok(_) => {}
             Err(err) => {
                 self.error_token(err.operator, &err.message);
                 std::process::exit(70);
@@ -112,7 +108,7 @@ impl LoxRunner {
 
     pub fn error_token(&mut self, token: Token, message: &str) {
         match token.token_type {
-            TokenType::EOF => self.report(token.line, " at end", message),
+            TokenType::Eof => self.report(token.line, " at end", message),
             _ => {
                 let mut pos_str = String::from("at '");
                 pos_str.push_str(token.lexeme.as_str());

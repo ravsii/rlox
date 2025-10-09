@@ -50,7 +50,7 @@ pub enum TokenType {
     Var,
     While,
 
-    EOF,
+    Eof,
     Unknown,
 }
 
@@ -100,7 +100,7 @@ impl fmt::Display for TokenType {
             TokenType::True => "True",
             TokenType::Var => "Var",
             TokenType::While => "While",
-            TokenType::EOF => "Eof",
+            TokenType::Eof => "Eof",
             TokenType::Unknown => "Unknown",
         };
         write!(f, "{}", s)

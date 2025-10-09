@@ -32,7 +32,7 @@ impl Scanner {
         }
 
         self.tokens
-            .push(Token::new(TokenType::EOF, "".into(), None, self.line));
+            .push(Token::new(TokenType::Eof, "".into(), None, self.line));
 
         Ok(self.tokens)
     }

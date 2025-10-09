@@ -3,6 +3,11 @@ use std::fmt;
 use crate::token::Token;
 
 #[derive(Debug, Clone)]
+pub enum Stmt {
+    Print(Expr),
+}
+
+#[derive(Debug, Clone)]
 pub enum Expr {
     Binary(Binary),
     Grouping(Grouping),

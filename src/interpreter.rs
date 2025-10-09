@@ -1,5 +1,5 @@
 use crate::{
-    ast::{Binary, Expr, Literal, Unary},
+    ast::{Binary, Expr, Literal, Stmt, Unary},
     token::{Token, TokenType},
 };
 
@@ -11,6 +11,22 @@ pub struct InterpreterError {
 pub struct Interpreter;
 
 impl Interpreter {
+    pub fn interpret(&self, statements: Vec<Stmt>) -> Result<(), InterpreterError> {
+        for statement in statements {
+            self.execute(statement)?;
+        }
+
+        Ok(())
+    }
+
+    pub fn execute(&self, statement: Stmt) -> Result<(), InterpreterError> {
+        match statement {
+            Stmt::Print(expr) => println!("{}", self.evaluate(expr)?),
+        }
+
+        Ok(())
+    }
+
     pub fn evaluate(&self, expr: Expr) -> Result<Literal, InterpreterError> {
         match expr {
             Expr::Binary(binary) => self.eval_binary(binary),
