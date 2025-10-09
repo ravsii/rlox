@@ -13,6 +13,7 @@ pub enum Expr {
     Grouping(Grouping),
     Literal(Literal),
     Unary(Unary),
+    Varibale(Varibale),
 }
 
 impl Expr {
@@ -54,6 +55,11 @@ pub struct Grouping {
 pub struct Unary {
     pub operator: Token,
     pub right: Box<Expr>,
+}
+
+#[derive(Debug, Clone)]
+pub struct Varibale {
+    pub name: Token,
 }
 
 #[derive(Debug, Clone, PartialEq, PartialOrd)]

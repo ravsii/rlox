@@ -33,6 +33,7 @@ impl Interpreter {
             Expr::Grouping(grouping) => self.evaluate(*grouping.expression),
             Expr::Literal(literal) => Ok(literal),
             Expr::Unary(unary) => self.eval_unary(unary),
+            Expr::Varibale(varibale) => todo!(),
         }
     }
 
