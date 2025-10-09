@@ -1,5 +1,5 @@
 use crate::{
-    ast::{Expr, Literal, Stmt},
+    ast::{Expr, Literal, Stmt, VariableExpr},
     token::{Token, TokenType},
 };
 
@@ -22,14 +22,42 @@ impl Parser {
     pub fn parse(&mut self) -> Result<Vec<Stmt>, ParseError> {
         let mut statements = Vec::new();
         while !self.is_end() {
-            statements.push(self.statement()?);
+            statements.push(self.declaration()?);
         }
 
         Ok(statements)
     }
 
-    fn expression(&mut self) -> Result<Expr, ParseError> {
-        self.equality()
+    fn declaration(&mut self) -> Result<Stmt, ParseError> {
+        let stmt = if self.match_type(&[TokenType::Var]) {
+            self.var_declaration()
+        } else {
+            self.statement()
+        };
+
+        match stmt {
+            Ok(stmt) => Ok(stmt),
+            Err(_) => {
+                self.synchronize();
+                Ok(Stmt::Nop)
+            }
+        }
+    }
+
+    fn var_declaration(&mut self) -> Result<Stmt, ParseError> {
+        let name = self.consume(TokenType::Identifier, "Expect variable name.")?;
+
+        let mut initializer = Expr::Literal(Literal::Nil);
+        if self.match_type(&[TokenType::Equal]) {
+            initializer = self.expression()?
+        }
+
+        self.consume(
+            TokenType::Semicolon,
+            "Expect ';' after variable declaration.",
+        )?;
+
+        Ok(Stmt::new_variable(name, initializer))
     }
 
     fn statement(&mut self) -> Result<Stmt, ParseError> {
@@ -52,6 +80,10 @@ impl Parser {
         self.consume(TokenType::Semicolon, "Expect ';' after expression.")?;
 
         Ok(Stmt::Print(expr))
+    }
+
+    fn expression(&mut self) -> Result<Expr, ParseError> {
+        self.equality()
     }
 
     fn equality(&mut self) -> Result<Expr, ParseError> {
@@ -133,6 +165,12 @@ impl Parser {
             return Ok(Expr::Literal(prev.unwrap()));
         }
 
+        if self.match_type(&[TokenType::Identifier]) {
+            return Ok(Expr::Variable(VariableExpr {
+                name: self.previous(),
+            }));
+        }
+
         if self.match_type(&[TokenType::LeftParen]) {
             let expr = self.expression()?;
             self.consume(TokenType::RightParen, "Expect ')' after expression")?;
@@ -156,7 +194,7 @@ impl Parser {
         false
     }
 
-    fn consume(&mut self, token_type: TokenType, message: &str) -> Result<(), ParseError> {
+    fn consume(&mut self, token_type: TokenType, message: &str) -> Result<Token, ParseError> {
         if !self.check_token(token_type) {
             return Err(ParseError {
                 token: self.peek(),
@@ -164,9 +202,7 @@ impl Parser {
             });
         };
 
-        self.advance();
-
-        Ok(())
+        Ok(self.advance())
     }
 
     fn synchronize(&mut self) {

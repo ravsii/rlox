@@ -5,6 +5,23 @@ use crate::token::Token;
 #[derive(Debug, Clone)]
 pub enum Stmt {
     Print(Expr),
+    Var(VariableStmt),
+    Nop,
+}
+
+impl Stmt {
+    pub fn new_variable(name: Token, initializer: Expr) -> Stmt {
+        Stmt::Var(VariableStmt {
+            name,
+            initializer: Box::new(initializer),
+        })
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct VariableStmt {
+    pub name: Token,
+    pub initializer: Box<Expr>,
 }
 
 #[derive(Debug, Clone)]
@@ -13,7 +30,7 @@ pub enum Expr {
     Grouping(Grouping),
     Literal(Literal),
     Unary(Unary),
-    Varibale(Varibale),
+    Variable(VariableExpr),
 }
 
 impl Expr {
@@ -58,7 +75,7 @@ pub struct Unary {
 }
 
 #[derive(Debug, Clone)]
-pub struct Varibale {
+pub struct VariableExpr {
     pub name: Token,
 }
 
