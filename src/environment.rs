@@ -3,13 +3,13 @@ use std::collections::HashMap;
 use crate::ast::Literal;
 
 #[derive(Default)]
-struct Enviroment {
+pub struct Environment {
     values: HashMap<String, Literal>,
 }
 
-impl Enviroment {
+impl Environment {
     pub fn new() -> Self {
-        Enviroment::default()
+        Environment::default()
     }
 
     pub fn define(&mut self, name: &str, value: Literal) {

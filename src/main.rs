@@ -1,6 +1,6 @@
 mod ast;
 mod ast_printer;
-mod enviroment;
+mod environment;
 mod interpreter;
 mod parser;
 mod scanner;
@@ -15,6 +15,7 @@ use std::{
 };
 
 use crate::{
+    environment::Environment,
     interpreter::Interpreter,
     parser::Parser,
     token::{Token, TokenType},
@@ -76,7 +77,7 @@ impl LoxRunner {
 
     fn run(&mut self, source: String) {
         let scanner = Scanner::new(source);
-        let interpreter = Interpreter;
+        let mut interpreter = Interpreter::new(Environment::new());
 
         let tokens = match scanner.scan_tokens() {
             Ok(tokens) => tokens,

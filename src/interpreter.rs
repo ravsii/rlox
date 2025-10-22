@@ -1,5 +1,6 @@
 use crate::{
     ast::{Binary, Expr, Literal, Stmt, Unary},
+    environment::Environment,
     token::{Token, TokenType},
 };
 
@@ -8,10 +9,16 @@ pub struct InterpreterError {
     pub message: String,
 }
 
-pub struct Interpreter;
+pub struct Interpreter {
+    environment: Environment,
+}
 
 impl Interpreter {
-    pub fn interpret(&self, statements: Vec<Stmt>) -> Result<(), InterpreterError> {
+    pub fn new(environment: Environment) -> Self {
+        Interpreter { environment }
+    }
+
+    pub fn interpret(&mut self, statements: Vec<Stmt>) -> Result<(), InterpreterError> {
         for statement in statements {
             self.execute(statement)?;
         }
@@ -19,10 +26,13 @@ impl Interpreter {
         Ok(())
     }
 
-    pub fn execute(&self, statement: Stmt) -> Result<(), InterpreterError> {
+    pub fn execute(&mut self, statement: Stmt) -> Result<(), InterpreterError> {
         match statement {
             Stmt::Print(expr) => println!("{}", self.evaluate(expr)?),
-            Stmt::Var(_) => todo!(),
+            Stmt::Var(stmt) => {
+                let value = self.evaluate(*stmt.initializer)?;
+                self.environment.define(&stmt.name.lexeme, value);
+            }
             Stmt::Nop => {}
         }
 
@@ -35,7 +45,13 @@ impl Interpreter {
             Expr::Grouping(grouping) => self.evaluate(*grouping.expression),
             Expr::Literal(literal) => Ok(literal),
             Expr::Unary(unary) => self.eval_unary(unary),
-            Expr::Variable(_) => todo!(),
+            Expr::Variable(var) => {
+                let l = &var.name.lexeme;
+                let res = self.environment.get(l).cloned();
+                let v = res.unwrap_or(Literal::Nil);
+
+                Ok(v)
+            }
         }
     }
 
