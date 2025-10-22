@@ -1,5 +1,6 @@
 mod ast;
 mod ast_printer;
+mod enviroment;
 mod interpreter;
 mod parser;
 mod scanner;

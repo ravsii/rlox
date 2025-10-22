@@ -27,6 +27,9 @@ impl AstPrinter {
                     AstPrinter::print(&unary.right)
                 )
             }
+            Expr::Variable(var) => {
+                format!("{}", var.name)
+            }
         }
     }
 }
