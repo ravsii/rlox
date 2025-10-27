@@ -51,27 +51,44 @@ impl LoxRunner {
         self.run(contents);
     }
 
-    fn run_prompt(mut self) {
-        let mut input = String::new();
+    pub fn run_prompt(mut self) {
+        let mut buffer = String::new();
 
         loop {
-            print!("> ");
+            // print different prompt depending on whether we're in a multi-line block
+            if buffer.is_empty() {
+                print!("> ");
+            } else {
+                print!("| ");
+            }
             io::stdout().flush().unwrap();
 
-            match io::stdin().read_line(&mut input) {
-                Ok(0) => {
-                    println!("got EOF, closing...");
-                    return;
-                }
-                Ok(_) => {
-                    self.run(input.trim().to_string());
-                    input.clear();
-                }
-                Err(err) => {
-                    println!("failed to read line: {}", err);
-                    return;
-                }
+            let mut line = String::new();
+            let bytes_read = io::stdin().read_line(&mut line).unwrap();
+
+            // handle EOF (Ctrl+D)
+            if bytes_read == 0 {
+                println!("Got EOF, closing...");
+                break;
             }
+
+            let trimmed = line.trim_end();
+
+            // if we got an empty line AND have something in the buffer → execute
+            if trimmed.is_empty() && !buffer.trim().is_empty() {
+                self.run(buffer.trim().to_string());
+                buffer.clear();
+                continue;
+            }
+
+            // if empty line and buffer is empty → just reprompt
+            if trimmed.is_empty() {
+                continue;
+            }
+
+            // otherwise, accumulate line into buffer
+            buffer.push_str(trimmed);
+            buffer.push('\n');
         }
     }
 
