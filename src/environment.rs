@@ -9,7 +9,7 @@ pub enum EnvironmentError {
 #[derive(Default)]
 pub struct Environment {
     /// parent
-    enclosing: Option<Box<Environment>>,
+    parent: Option<Box<Environment>>,
     values: HashMap<String, Literal>,
 }
 
@@ -20,7 +20,7 @@ impl Environment {
 
     pub fn new_child(parent: Environment) -> Self {
         Environment {
-            enclosing: Some(Box::new(parent)),
+            parent: Some(Box::new(parent)),
             ..Environment::default()
         }
     }
@@ -31,10 +31,16 @@ impl Environment {
                 *v = value.clone();
                 Ok(value)
             }
-            None => Err(EnvironmentError::UndefinedVariable(format!(
-                "Undefined variable '{}'",
-                name,
-            ))),
+            None => {
+                if let Some(parent) = &mut self.parent {
+                    parent.assign(name, value)
+                } else {
+                    Err(EnvironmentError::UndefinedVariable(format!(
+                        "Undefined variable '{}'",
+                        name,
+                    )))
+                }
+            }
         }
     }
 
@@ -45,10 +51,16 @@ impl Environment {
     pub fn get(&self, name: &str) -> Result<Literal, EnvironmentError> {
         match self.values.get(name) {
             Some(v) => Ok(v.clone()),
-            None => Err(EnvironmentError::UndefinedVariable(format!(
-                "Undefined variable '{}'",
-                name,
-            ))),
+            None => {
+                if let Some(parent) = &self.parent {
+                    parent.get(name)
+                } else {
+                    Err(EnvironmentError::UndefinedVariable(format!(
+                        "Undefined variable '{}'",
+                        name,
+                    )))
+                }
+            }
         }
     }
 }
