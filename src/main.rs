@@ -8,10 +8,12 @@ mod token;
 
 use scanner::Scanner;
 use std::{
+    cell::RefCell,
     env::args,
     fs,
     io::{self, Write},
     path::Path,
+    rc::Rc,
 };
 
 use crate::{
@@ -94,7 +96,8 @@ impl LoxRunner {
 
     fn run(&mut self, source: String) {
         let scanner = Scanner::new(source);
-        let mut interpreter = Interpreter::new(Environment::new());
+        let environment = Rc::new(RefCell::new(Environment::new()));
+        let mut interpreter = Interpreter::new(environment);
 
         let tokens = match scanner.scan_tokens() {
             Ok(tokens) => tokens,

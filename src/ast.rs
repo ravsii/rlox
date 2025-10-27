@@ -4,6 +4,7 @@ use crate::token::Token;
 
 #[derive(Debug, Clone)]
 pub enum Stmt {
+    Block(Vec<Stmt>),
     Print(Expr),
     Var(VariableStmt),
     Nop,

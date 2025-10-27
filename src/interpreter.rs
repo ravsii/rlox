@@ -1,3 +1,5 @@
+use std::{cell::RefCell, rc::Rc};
+
 use crate::{
     ast::{Binary, Expr, Literal, Stmt, Unary},
     environment::{Environment, EnvironmentError},
@@ -10,11 +12,11 @@ pub struct InterpreterError {
 }
 
 pub struct Interpreter {
-    environment: Environment,
+    environment: Rc<RefCell<Environment>>,
 }
 
 impl Interpreter {
-    pub fn new(environment: Environment) -> Self {
+    pub fn new(environment: Rc<RefCell<Environment>>) -> Self {
         Interpreter { environment }
     }
 
@@ -28,10 +30,17 @@ impl Interpreter {
 
     pub fn execute(&mut self, statement: Stmt) -> Result<(), InterpreterError> {
         match statement {
+            Stmt::Block(statements) => {
+                let child_env = Environment::new_child(self.environment.clone());
+                let rc = Rc::new(RefCell::new(child_env));
+                self.execute_block(statements, rc)?;
+            }
             Stmt::Print(expr) => println!("{}", self.evaluate(expr)?),
             Stmt::Var(stmt) => {
                 let value = self.evaluate(*stmt.initializer)?;
-                self.environment.define(&stmt.name.lexeme, value);
+                self.environment
+                    .borrow_mut()
+                    .define(&stmt.name.lexeme, value);
             }
             Stmt::Nop => {}
         }
@@ -46,7 +55,7 @@ impl Interpreter {
             Expr::Grouping(grouping) => self.evaluate(*grouping.expression),
             Expr::Literal(literal) => Ok(literal),
             Expr::Unary(unary) => self.eval_unary(unary),
-            Expr::Variable(var) => match self.environment.get(&var.name.lexeme) {
+            Expr::Variable(var) => match self.environment.borrow().get(&var.name.lexeme) {
                 Ok(value) => Ok(value),
                 Err(err) => match err {
                     EnvironmentError::UndefinedVariable(msg) => Err(InterpreterError {
@@ -58,9 +67,32 @@ impl Interpreter {
         }
     }
 
+    fn execute_block(
+        &mut self,
+        statements: Vec<Stmt>,
+        environment: Rc<RefCell<Environment>>,
+    ) -> Result<(), InterpreterError> {
+        let previous = self.environment.clone();
+        self.environment = environment.clone();
+
+        for statement in statements {
+            if let Err(err) = self.execute(statement) {
+                self.environment = previous;
+                return Err(err);
+            }
+        }
+
+        self.environment = previous;
+        Ok(())
+    }
+
     fn assign(&mut self, name: Token, expr: Expr) -> Result<Literal, InterpreterError> {
         let value = self.evaluate(expr)?;
-        match self.environment.assign(&name.lexeme, value.clone()) {
+        match self
+            .environment
+            .borrow_mut()
+            .assign(&name.lexeme, value.clone())
+        {
             Ok(value) => Ok(value),
             Err(err) => match err {
                 EnvironmentError::UndefinedVariable(msg) => Err(InterpreterError {
