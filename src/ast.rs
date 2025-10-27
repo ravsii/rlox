@@ -26,6 +26,7 @@ pub struct VariableStmt {
 
 #[derive(Debug, Clone)]
 pub enum Expr {
+    Assign { name: Token, value: Box<Expr> },
     Binary(Binary),
     Grouping(Grouping),
     Literal(Literal),

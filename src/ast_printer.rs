@@ -5,6 +5,9 @@ pub struct AstPrinter;
 impl AstPrinter {
     pub fn print(expr: &Expr) -> String {
         match expr {
+            Expr::Assign { name, value } => {
+                format!("(assigntment {} {})", name, AstPrinter::print(value))
+            }
             Expr::Binary(binary) => format!(
                 "({} {} {})",
                 binary.operator.lexeme,

@@ -1,6 +1,6 @@
 use crate::{
     ast::{Binary, Expr, Literal, Stmt, Unary},
-    environment::Environment,
+    environment::{Environment, EnvironmentError},
     token::{Token, TokenType},
 };
 
@@ -39,8 +39,9 @@ impl Interpreter {
         Ok(())
     }
 
-    pub fn evaluate(&self, expr: Expr) -> Result<Literal, InterpreterError> {
+    pub fn evaluate(&mut self, expr: Expr) -> Result<Literal, InterpreterError> {
         match expr {
+            Expr::Assign { name, value } => self.assign(name, *value),
             Expr::Binary(binary) => self.eval_binary(binary),
             Expr::Grouping(grouping) => self.evaluate(*grouping.expression),
             Expr::Literal(literal) => Ok(literal),
@@ -55,7 +56,20 @@ impl Interpreter {
         }
     }
 
-    fn eval_binary(&self, binary: Binary) -> Result<Literal, InterpreterError> {
+    fn assign(&mut self, name: Token, expr: Expr) -> Result<Literal, InterpreterError> {
+        let value = self.evaluate(expr)?;
+        match self.environment.assign(&name.lexeme, value.clone()) {
+            Ok(value) => Ok(value),
+            Err(err) => match err {
+                EnvironmentError::UndefinedVariable(msg) => Err(InterpreterError {
+                    operator: name,
+                    message: msg,
+                }),
+            },
+        }
+    }
+
+    fn eval_binary(&mut self, binary: Binary) -> Result<Literal, InterpreterError> {
         let left = self.evaluate(*binary.left)?;
         let right = self.evaluate(*binary.right)?;
 
@@ -128,7 +142,7 @@ impl Interpreter {
         })
     }
 
-    fn eval_unary(&self, unary: Unary) -> Result<Literal, InterpreterError> {
+    fn eval_unary(&mut self, unary: Unary) -> Result<Literal, InterpreterError> {
         let right = self.evaluate(*unary.right)?;
 
         if unary.operator.token_type == TokenType::Minus {
