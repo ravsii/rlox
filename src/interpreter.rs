@@ -46,13 +46,15 @@ impl Interpreter {
             Expr::Grouping(grouping) => self.evaluate(*grouping.expression),
             Expr::Literal(literal) => Ok(literal),
             Expr::Unary(unary) => self.eval_unary(unary),
-            Expr::Variable(var) => {
-                let l = &var.name.lexeme;
-                let res = self.environment.get(l).cloned();
-                let v = res.unwrap_or(Literal::Nil);
-
-                Ok(v)
-            }
+            Expr::Variable(var) => match self.environment.get(&var.name.lexeme) {
+                Ok(value) => Ok(value),
+                Err(err) => match err {
+                    EnvironmentError::UndefinedVariable(msg) => Err(InterpreterError {
+                        operator: var.name,
+                        message: msg,
+                    }),
+                },
+            },
         }
     }
 

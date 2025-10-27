@@ -8,12 +8,21 @@ pub enum EnvironmentError {
 
 #[derive(Default)]
 pub struct Environment {
+    /// parent
+    enclosing: Option<Box<Environment>>,
     values: HashMap<String, Literal>,
 }
 
 impl Environment {
     pub fn new() -> Self {
         Environment::default()
+    }
+
+    pub fn new_child(parent: Environment) -> Self {
+        Environment {
+            enclosing: Some(Box::new(parent)),
+            ..Environment::default()
+        }
     }
 
     pub fn assign(&mut self, name: &str, value: Literal) -> Result<Literal, EnvironmentError> {
@@ -33,7 +42,13 @@ impl Environment {
         self.values.insert(name.to_string(), value);
     }
 
-    pub fn get(&self, name: &str) -> Option<&Literal> {
-        self.values.get(name)
+    pub fn get(&self, name: &str) -> Result<Literal, EnvironmentError> {
+        match self.values.get(name) {
+            Some(v) => Ok(v.clone()),
+            None => Err(EnvironmentError::UndefinedVariable(format!(
+                "Undefined variable '{}'",
+                name,
+            ))),
+        }
     }
 }
